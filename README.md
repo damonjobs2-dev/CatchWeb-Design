@@ -115,10 +115,6 @@ The goal is to work from any reference URL your agent can access. Completeness d
 
 Style adaptation uses the extracted rules as input. Business flows and complex components still need implementation and validation in the target project. Use assets you have permission to reuse.
 
-## Versioning
-
-The first finalized public release starts at **1.2.0**. Keep the skill metadata, README, and release tag aligned; subsequent releases increment from that version.
-
 ## License
 
 [MIT](LICENSE). Independently packaged from CatchArt's website design research workflow. Initial open-source version: **1.2.0**.
@@ -164,5 +160,3 @@ CatchWeb-Design 将参考网页整理成一份详细、可浏览的设计规范�
 改版由你的开发 Agent 在目标项目中执行；这个 Skill 提供研究流程、规范模板和工程交付，不会自动部署或修改其他网站。目前展示框架的界面标签为中文。
 
 介绍图由 AI 生成，说明“普通原型 → 有完整设计语言的页面”的使用场景，不是真实测试结果对比。开源协议为 MIT，当前版本为 **1.2.0**。
-
-版本约定：新独立项目或 Skill 首次定版开源从 **1.2.0** 开始，后续在此基础上递增；定版发布号不使用 `0.1.0` 或 `beta` 后缀。`SKILL.md`、介绍与发布标签保持一致。
