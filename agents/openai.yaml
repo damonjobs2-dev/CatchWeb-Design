@@ -1,0 +1,4 @@
+interface:
+  display_name: "CatchWeb-Design"
+  short_description: "Turn reference websites into reusable design specs"
+  default_prompt: "Use $catchweb-design to analyze this reference page and deliver a browsable design specification plus DESIGN.md for restyling my website."

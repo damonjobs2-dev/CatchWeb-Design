@@ -1,0 +1,20 @@
+<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CatchWeb-Design extraction fixture</title>
+<style>
+:root{--color-primary:#b52726;--surface:#f3f2ee;--radius-card:16px;--space-unit:8px;--private-session:"not-a-design-token"}
+*{box-sizing:border-box}body{margin:0;background:var(--surface);color:#202020;font:16px/1.6 Georgia,serif}
+header{position:sticky;top:0;background:white;border-bottom:1px solid #ccc;padding:16px 32px;z-index:2}
+nav{display:flex;gap:24px}main{max-width:1100px;margin:auto;padding:48px 32px}h1{font-size:64px;line-height:1.1;letter-spacing:-2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.card{border:1px solid #aaa;border-radius:16px;padding:24px;background:white}
+button{background:#b52726;color:white;border:0;border-radius:8px;padding:12px 24px;transition:transform .2s linear}
+button:hover{transform:translateY(-4px)}button:focus-visible{outline:3px solid #1457ae}button:disabled{opacity:.4}
+.dot{display:block;width:16px;height:16px;background:#b52726;animation:pulse 2s linear infinite}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .25s ease-out,transform .25s ease-out}.reveal.visible{opacity:1;transform:translateY(0)}
+@keyframes pulse{from{opacity:.4}to{opacity:1}}section{min-height:70vh}footer{padding:32px;background:#202020;color:white}
+@media(max-width:600px){h1{font-size:40px}.grid{grid-template-columns:1fr}main{padding:24px 16px}}
+</style>
+<header><nav><a href="?page=home">首页</a><a href="?page=detail">详情</a></nav></header>
+<main><section><h1>视觉研究夹具</h1><p>这是本地测试页面，数值专用于验证提取器。</p><span class="dot"></span>
+<button id="toggle" aria-pressed="false" onclick="this.setAttribute('aria-pressed',this.getAttribute('aria-pressed')!=='true')">切换</button>
+<button disabled>不可用</button><input aria-label="test field" value="DO_NOT_CAPTURE_THIS_VALUE">
+</section><section class="grid reveal"><article class="card"><h2>卡片一</h2><p>内容一</p></article><article class="card"><h2>卡片二</h2><p>内容二</p></article></section></main>
+<footer>夹具页脚</footer><script>if(new URL(location).searchParams.get('page')==='detail'){document.querySelector('h1').textContent='详情模板';document.querySelector('.grid').style.gridTemplateColumns='1fr';}new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting)entry.target.classList.add('visible')}),{threshold:.3}).observe(document.querySelector('.reveal'));</script></html>

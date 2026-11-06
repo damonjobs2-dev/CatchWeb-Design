@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CatchWeb-Design · Design study</title>
+<style>__DOCUMENT_CSS__</style>
+<aside><div><strong>CatchWeb-Design</strong><small>Website design study</small></div><div class="directory-tools"><input id="directory-search" type="search" aria-label="搜索文档目录" placeholder="搜索设计规范…"><button id="directory-toggle" type="button" aria-expanded="false" aria-controls="nav">目录</button></div><nav id="nav" aria-label="文档目录"></nav><div id="directory-empty" role="status" hidden>没有匹配的目录</div><footer>规范框架 · CatchWeb-Design<br>样例区域 · 原站视觉</footer></aside>
+<div class="docbar"><span id="doc-name">网站设计规范</span><div class="doc-tabs"><a href="#overview">概览</a><a href="#colors">基础</a><a href="#pages">页面</a><a href="#motion">交互动效</a></div></div><main><details class="mobile-toc" id="mobile-toc" hidden><summary>本页内容</summary><div id="mobile-toc-links"></div></details><header id="overview"><div class="intro-row"><a id="source" target="_blank" rel="noopener noreferrer"></a><span class="meta" id="date" hidden></span></div><h1 id="title"></h1><p class="lede" id="summary"></p><ul id="coverage" hidden></ul></header><div id="sections"></div></main><div class="page-toc" aria-label="页内目录"><div>本页内容</div><div id="page-toc-links"></div></div>
+<script type="application/json" id="design-data">__DESIGN_DATA__</script>
+<script>
+'use strict';
+const data=JSON.parse(document.getElementById('design-data').textContent);
+const labels={measured:'实测',observed:'已观察',declared:'仅样式声明',inferred:'视觉估计',untested:'待补测'};
+const stateNames={default:'默认',hover:'悬停',focus:'焦点',active:'按下',selected:'选中',disabled:'禁用',loading:'加载',error:'错误',success:'成功'};
+function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
+function link(text,href){const a=el('a',text);a.href=href;a.target='_blank';a.rel='noopener noreferrer';return a}
+function badge(x){const n=el('span',labels[x.basis]||x.basis,'badge');n.dataset.basis=x.basis;return n}
+function evidence(x){return ''}
+function style(n,styles){for(const [k,v]of Object.entries(styles||{}))n.style.setProperty(k,v)}
+function sample(c,s){
+ if(s.basis==='untested'||(!s.styles&&!s.screenshot))return el('div',s.note||'尚未取得此状态样本','unknown');
+ const host=el('div',undefined,'sample');
+ if(s.rendering==='screenshot'&&s.screenshot){const a=link('',s.screenshot),im=el('img');im.src=s.screenshot;im.alt=c.name+' / '+(stateNames[s.name]||s.name);a.append(im);host.append(a);return host}
+ const n=el(c.kind);n.dataset.sample='true';if(c.kind==='input'||c.kind==='textarea'){n.placeholder=s.label||c.label||'示例';n.setAttribute('aria-label',c.name+' '+s.name)}else n.textContent=s.label||c.label||c.name;
+ if(c.kind==='button')n.type='button';if(s.name==='disabled'&&'disabled'in n)n.disabled=true;
+ style(n,s.styles);host.append(n);return host;
+}
+function section(id,title){const n=el('section');n.id=id;n.append(el('h2',title));document.getElementById('sections').append(n);return n}
+function empty(n){n.append(el('p','本轮尚未取得足够证据。','empty'))}
+function toolComparison(node,panels){const title=node.querySelector('h2');node.replaceChildren(title,el('p','各结果分别列出；屏幕尺寸与采集范围不同，数值仅代表各自测试。','tool-comparison-intro'));const grid=el('div',undefined,'tool-grid');for(const panel of panels){const article=el('article',undefined,'tool-panel');article.append(el('h3',panel.name),el('p',panel.subtitle||'','tool-subtitle'));if(panel.note)article.append(el('p',panel.note,'note'));const rows=panel.rows||[];function renderRows(items){const ul=el('ul',undefined,'tool-values');for(const item of items){const li=el('li',undefined,'tool-value'),left=el('div',undefined,'tool-value-left');if(item.swatch){const sw=el('span',undefined,'tool-swatch');sw.style.backgroundColor=item.swatch;sw.setAttribute('aria-hidden','true');left.append(sw)}left.append(el('span',item.label,'tool-value-name'));li.append(left,el('span',item.value||'','tool-value-data'));ul.append(li)}return ul}if(!rows.length)article.append(el('p',panel.empty||'本次未采集','tool-empty'));else{article.append(renderRows(rows.slice(0,6)));if(rows.length>6){const detail=el('details');detail.append(el('summary','展开其余 '+(rows.length-6)+' 项'),renderRows(rows.slice(6)));article.append(detail)}}grid.append(article)}node.append(grid)}
+document.title=data.title+' · CatchWeb-Design';document.getElementById('title').textContent=data.title;document.getElementById('summary').textContent=data.summary||'';document.getElementById('date').textContent=data.date||'';
+if(data.sourceUrl){const a=document.getElementById('source');a.textContent=data.sourceUrl;a.href=data.sourceUrl}
+for(const x of data.coverage||[])document.getElementById('coverage').append(el('li',x));
+function hexInfo(value){let hex=value.slice(1);if(hex.length<=4)hex=[...hex].map(c=>c+c).join('');return {color:'#'+hex.slice(0,6).toUpperCase(),opacity:hex.length===8?Number((parseInt(hex.slice(6),16)/255*100).toFixed(1)):100}}
+function caution(node,item){if(item.basis==='inferred'||item.basis==='untested')node.append(badge(item));if(item.basis==='declared')node.append(el('span','仅样式声明，实际表现未验证','note'))}
+const colors=section('colors','色彩');
+const colorGroups=new Map();for(const x of data.colors||[]){const group=x.group||'色彩';if(!colorGroups.has(group))colorGroups.set(group,[]);colorGroups.get(group).push(x)}
+for(const [name,items]of colorGroups){if(name!=='色彩')colors.append(el('h3',name,'group-heading'));const grid=el('div',undefined,'token-grid');for(const x of items){const n=el('article'),sw=el('div',undefined,'swatch'),hex=hexInfo(x.value);sw.style.backgroundColor=x.value;n.append(sw,el('h3',x.name),el('div',hex.color,'value'));if(hex.opacity<100)n.append(el('p','不透明度 '+hex.opacity+'%','note'));if(x.usage)n.append(el('p',x.usage,'note'));if(x.note)n.append(el('p',x.note,'note'));caution(n,x);grid.append(n)}colors.append(grid)}
+const types=section('typography','字体');
+if(data.fontFamilies){const intro=el('div',undefined,'font-explainer');for(const [key,label]of [['english','英文字体'],['chinese','中文字体']]){if(data.fontFamilies[key]?.length){const row=el('p');row.append(el('strong',label),el('span',data.fontFamilies[key].join('、')));intro.append(row)}}intro.append(el('p',data.fontFamilies.note||'声明字体 · 实际渲染未验证','font-note'));types.append(intro)}
+const typeLabels={'font-size':'字号','font-weight':'字重','line-height':'行高','letter-spacing':'字距','font-family':'声明字体'};
+const weights={'400':'常规','500':'中等','600':'半粗','700':'粗体'};
+for(const x of [...data.typography||[]].sort((a,b)=>parseFloat(b.styles?.['font-size']||0)-parseFloat(a.styles?.['font-size']||0))){const n=el('article',undefined,'type-row'),meta=el('div',undefined,'type-meta'),values=el('div',undefined,'type-values'),sample=el('div',x.sample||'文字样张','type-sample');style(sample,x.styles);meta.append(el('h3',x.name));for(const [key,label]of Object.entries(typeLabels)){const value=x.styles?.[key];if(value!==undefined)values.append(el('span',label+' '+value+(key==='font-weight'&&weights[value]?'（'+weights[value]+'）':'')))}meta.append(values);if(x.note)meta.append(el('p',x.note));caution(meta,x);n.append(meta,sample);types.append(n)}
+const layout=section('layout','布局');for(const x of data.layout||[]){const n=el('div',undefined,'rule'),body=el('div');body.append(el('p',x.value||''));if(x.note)body.append(el('p',x.note,'note'));caution(body,x);n.append(el('strong',x.name),body);layout.append(n)}
+if(data.layoutDiagram==='sidebar-grid'){const diagram=el('div',undefined,'layout-diagram');diagram.innerHTML='<div class="layout-rail">导航区</div><div class="layout-body"><div>主要内容区</div><div class="layout-cards"><span></span><span></span><span></span><span></span></div></div>';layout.append(diagram)}
+const foundationNames={style:'设计风格',spacing:'间距',radius:'圆角',border:'边框',shadow:'阴影',icons:'图标'};
+function shadowEntry(x){
+ const article=el('article',undefined,'foundation-shadow'),stage=el('div',undefined,'foundation-shadow-stage'),details=el('div',undefined,'foundation-shadow-details');
+ if(x.styles?.['box-shadow']&&x.basis!=='untested'){const preview=el('div',undefined,'foundation-shadow-example');preview.style.setProperty('box-shadow',x.styles['box-shadow']);preview.setAttribute('role','img');preview.setAttribute('aria-label',x.name+' 阴影效果');stage.append(preview)}else stage.append(el('p','阴影效果未测量','note'));
+ details.append(el('h3',x.name));const layers=Array.isArray(x.shadowLayers)?x.shadowLayers:[];
+ if(!layers.length)details.append(el('p','阴影参数未测量','note'));
+ for(const [i,layer] of layers.entries()){
+  if(layers.length>1)details.append(el('h4','第 '+(i+1)+' 层'));
+  const dl=el('dl',undefined,'foundation-shadow-spec');
+  for(const [label,k] of [['颜色','color'],['不透明度','opacity'],['水平偏移','offsetX'],['垂直偏移','offsetY'],['模糊范围','blur'],['扩散范围','spread']]){const pair=el('div');pair.append(el('dt',label),el('dd',layer[k]==null?'未测量':String(layer[k])));dl.append(pair)}
+  if(layer.inset!==false){const pair=el('div');pair.append(el('dt','阴影类型'),el('dd',layer.inset===true?'内阴影':'未测量'));dl.append(pair)}details.append(dl);
+ }
+ if(x.basis==='inferred'||x.basis==='untested')details.append(badge(x));article.append(stage,details);return article;
+}
+function radiusTable(entries){
+ const wrap=el('div',undefined,'radius-table-wrap'),table=el('table',undefined,'radius-table'),head=el('thead'),row=el('tr'),body=el('tbody');
+ for(const label of ['应用位置','数值','圆角预览']){const th=el('th',label);th.scope='col';row.append(th)}head.append(row);
+ for(const item of entries){const tr=el('tr'),name=el('th',item.name),value=el('td'),preview=el('td');name.scope='row';value.append(el('code',String(item.value??'未测量')));caution(value,item);if(item.note)value.append(el('p',item.note,'note'));const match=/^(\d+(?:\.\d+)?)px$/.exec(String(item.value||'').trim());
+ if(match&&item.basis!=='untested'){const radius=Number(match[1]),corner=el('div',undefined,'radius-corner'),surface=el('span');corner.setAttribute('role','img');corner.setAttribute('aria-label',item.name+'，圆角 '+radius+'px');surface.style.width=surface.style.height=Math.max(96,Math.min(240,radius*2))+'px';surface.style.borderRadius=radius+'px';corner.append(surface);preview.append(corner)}else preview.append(el('span','未测量','note'));tr.append(name,value,preview);body.append(tr)}table.append(head,body);wrap.append(table);return wrap;
+}
+function paddingSamples(items){
+ const grid=el('div',undefined,'padding-grid');
+ for(const x of items){const card=el('article',undefined,'padding-card');card.append(el('h3',x.name));const sides=x.sides||{};
+ if(x.basis==='untested'||['top','right','bottom','left'].some(k=>sides[k]==null)){card.append(el('p','内边距未测量','note'));caution(card,x);grid.append(card);continue}
+ const diagram=el('div',undefined,'padding-illustration');diagram.setAttribute('role','img');diagram.setAttribute('aria-label',x.name+'内边距示意');
+ for(const [key,label]of [['top','上'],['right','右'],['bottom','下'],['left','左']])diagram.append(el('span',label+' '+sides[key],'padding-'+key));
+ const box=el('div',undefined,'padding-box');box.style.padding=['top','right','bottom','left'].map(k=>Math.min(parseFloat(sides[k]),20)+'px').join(' ');box.append(el('span','内容'));diagram.append(box);card.append(diagram);caution(card,x);if(x.note)card.append(el('p',x.note,'note'));grid.append(card)}return grid;
+}
+function borderEntry(x){const article=el('article',undefined,'foundation-border'),stage=el('div',undefined,'border-stage'),meta=el('div',undefined,'foundation-border-details');meta.append(el('h3',x.name));const styles=x.styles||{};
+ if(x.basis!=='untested'&&(styles.border||styles['border-width'])){const preview=el('div',x.label||'示例','border-preview');style(preview,styles);stage.append(preview)}else stage.append(el('p','边框效果未测量','note'));
+ const dl=el('dl',undefined,'foundation-border-spec');for(const [label,key]of [['线宽','border-width'],['样式','border-style'],['颜色','border-color']]){const pair=el('div'),value=styles[key];pair.append(el('dt',label),el('dd',value?(key==='border-color'&&value.startsWith('#')?hexInfo(value).color:key==='border-style'&&value==='solid'?'实线':value):'未测量'));dl.append(pair)}meta.append(dl);caution(meta,x);if(x.note)meta.append(el('p',x.note,'note'));article.append(stage,meta);return article;
+}
+for(const [key,title] of Object.entries(foundationNames)){const n=section(key,title),items=data.foundations?.[key]||[];
+ if(key==='spacing'){if(items.length){const scale=el('div',undefined,'spacing-scale');for(const x of items){const unit=el('article',undefined,'space-unit'),stage=el('div',undefined,'bar-stage');if(x.basis!=='untested'&&/^\d+(?:\.\d+)?px$/.test(x.value||'')){const bar=el('div',undefined,'bar');bar.style.width=x.value;stage.append(bar)}unit.append(stage,el('code',x.value||'未测量'),el('p',x.name));caution(unit,x);scale.append(unit)}n.append(scale)}if(data.foundations?.padding?.length){n.append(el('h3','内边距','group-heading'),paddingSamples(data.foundations.padding))}continue}
+ if(key==='radius'&&items.length){n.append(radiusTable(items));continue}
+ for(const x of items){if(key==='shadow'){n.append(shadowEntry(x));continue}if(key==='border'){n.append(borderEntry(x));continue}const row=el('div',undefined,'rule'),body=el('div');body.append(el('p',x.value||''));if(x.note)body.append(el('p',x.note,'note'));caution(body,x);row.append(el('strong',x.name),body);n.append(row)}
+}
+const components=section('components','组件与状态');components.append(el('p','切换状态查看本地样例，下面可并排比较。也可对样例悬停、聚焦和点按；仅在对应状态样式已采集时切换。未采集状态保留缺口。'));
+for(const c of data.components||[]){
+ const article=el('article',undefined,'component'),head=el('div',undefined,'component-header');article.dataset.presentation=c.presentation||'compact';head.append(el('h3',c.name),el('span',c.note||'','note'));article.append(head);
+ const box=el('div',undefined,'playground'),controls=el('div',undefined,'controls'),stage=el('div',undefined,'stage'),meta=el('div',undefined,'state-meta');box.append(controls,stage,meta);article.append(box);
+ let selected=c.states.find(s=>s.name==='default')||c.states[0];const buttons=[];
+ function describe(s){meta.replaceChildren(badge(s),el('span',(s.basis==='untested'?'缺少采集证据':s.rendering==='screenshot'?'原站截图 · 行为未复现':'本地视觉复现')+' · '+evidence(s)),el('span',s.note||''));if(s.screenshot&&s.rendering!=='screenshot')meta.append(link('原站截图',s.screenshot));}
+ function draw(s,reactive=true){stage.replaceChildren(sample(c,s));describe(s);
+ const n=stage.querySelector('[data-sample]');if(!n||!reactive)return;
+ const get=name=>c.states.find(v=>v.name===name&&v.styles&&v.basis!=='untested');
+ function apply(name){const target=get(name);if(target){n.removeAttribute('style');style(n,target.styles);meta.replaceChildren(badge(target),el('span',(stateNames[name]||name)+' · 本地样式交互 · '+evidence(target)))}}
+ function restore(){n.removeAttribute('style');style(n,s.styles);describe(s)}
+ n.addEventListener('pointerenter',()=>apply('hover'));n.addEventListener('pointerleave',restore);n.addEventListener('focus',()=>apply('focus'));n.addEventListener('blur',restore);n.addEventListener('pointerdown',()=>apply('active'));n.addEventListener('pointerup',restore);n.addEventListener('click',()=>{const v=get('selected');if(v)choose(v)});
+ }
+ function choose(s){selected=s;for(const [b,v]of buttons)b.setAttribute('aria-pressed',String(v===s));draw(s)}
+ for(const s of c.states){const b=el('button',stateNames[s.name]||s.name,'state-control');b.type='button';b.setAttribute('aria-label',c.name+'：'+(stateNames[s.name]||s.name));b.addEventListener('click',()=>choose(s));buttons.push([b,s]);controls.append(b)}
+ const grid=el('div',undefined,'comparison');for(const s of c.states){const tile=el('div',undefined,'compare-state'),preview=el('div',undefined,'compare-stage'),name=el('div',undefined,'compare-name');preview.append(sample(c,s));name.append(el('span',stateNames[s.name]||s.name),badge(s));tile.append(preview,name);grid.append(tile)}article.append(grid);
+ if(c.presentationNote)article.append(el('p',c.presentationNote,'note'));components.append(article);if(selected)choose(selected);
+}if(!data.components?.length)empty(components);
+const motion=section('motion','动效与触发');for(const x of data.motion||[]){const n=el('article',undefined,'motion-row'),r=el('div',undefined,'row');r.append(el('h3',x.name),badge(x));n.append(r,el('p',x.note||''),el('div',evidence(x),'note'));if(x.basis==='measured'&&x.frames&&x.duration){const stage=el('div',undefined,'motion-preview'),dot=el('div',undefined,'motion-object'),b=el('button','重播已测动效','replay');stage.append(dot);n.append(stage,b,el('p',x.duration+'ms · '+(x.easing||'linear'),'note'));b.addEventListener('click',()=>{dot.getAnimations().forEach(a=>a.cancel());dot.animate(x.frames,{duration:x.duration,easing:x.easing||'linear',fill:'none'})})}else n.append(el('p','未取得完整时间线，本页不补画动画。','note'));motion.append(n)}if(!data.motion?.length)empty(motion);
+const pages=section('pages','页面与响应式'),pg=el('div',undefined,'pages');pages.append(pg);for(const x of data.pages||[]){const n=el('article',undefined,'page'),a=link('',x.screenshot),im=el('img');im.src=x.screenshot;im.alt=x.name;im.loading='lazy';a.append(im);n.append(a,el('h3',x.name),el('p',x.note||'','note'),link('查看原页面',x.url));pg.append(n)}if(!data.pages?.length)empty(pages);
+const gaps=section('evidence','覆盖与原始证据'),ul=el('ul');for(const x of data.gaps||[])ul.append(el('li',x));gaps.append(ul);const attachments=el('div',undefined,'attachments');for(const x of data.attachments||[])attachments.append(link(x.label,x.href));gaps.append(attachments);
+for(const [id,panels] of Object.entries(data.foundationComparisons||{})){const node=document.getElementById(id);if(node&&Array.isArray(panels))toolComparison(node,panels)}
+if(data.comparison?.length){const n=section('comparison','采集工具对比');n.append(el('p','同一目标网站的独立测试；结果覆盖范围和运行环境各有差异。'));for(const x of data.comparison){const card=el('article',undefined,'type-row');card.append(el('h3',x.name),el('p',x.status||''),el('p',x.result||''),el('p',x.limit||'','note'));n.append(card)}}
+
+// Grouped documentation and component pages. Source-site styles remain confined to samples.
+const sectionMeta=[['overview','概览','概览'],['style','设计风格','概览'],['colors','色彩','基础'],['typography','字体','基础'],['spacing','间距','基础'],['layout','布局','基础'],['radius','圆角','基础'],['border','边框','基础'],['shadow','阴影','基础'],['icons','图标',data.foundations?.icons?.length?'基础':'内部'],['pages','页面与响应式',data.pages?.length?'页面':'内部'],['motion','交互动效','交互动效'],['components','组件总览','内部'],['evidence','采集说明','内部']];
+if(data.comparison?.length)sectionMeta.splice(sectionMeta.length-1,0,['comparison','采集工具对比','页面']);
+const routes=new Map();const outline=new Map();const navItems=[];
+for(const [id,title,group]of sectionMeta){const node=document.getElementById(id);node.classList.add('doc-page');if(id!=='overview')node.querySelector('h2').textContent=title;routes.set(id,node);if(group!=='内部')navItems.push({id,title,group});outline.set(id,[])}
+const coreCategories=['导航','按钮','卡片','标签','输入与搜索','表单','弹窗与浮层'];
+const categoryAliases={navigation:'导航',buttons:'按钮',cards:'卡片',tags:'标签',inputs:'输入与搜索',forms:'表单',overlays:'弹窗与浮层',entry:'输入与搜索',display:'卡片',feedback:'弹窗与浮层'};
+const category=c=>categoryAliases[c.category]||(c.category&&!['general','other'].includes(c.category)?c.category:(c.kind==='button'?'按钮':c.kind==='input'||c.kind==='textarea'?'输入与搜索':'卡片'));
+function heading(node,route,name,key){const h=el('h2',name,'doc-heading');h.id=route+'--'+key;node.append(h);outline.get(route).push({id:h.id,title:name});return h}
+function table(headers,rows){const wrap=el('div',undefined,'spec-table-wrap'),t=el('table',undefined,'spec-table'),head=el('thead'),tr=el('tr'),body=el('tbody');for(const h of headers){const th=el('th',h);th.scope='col';tr.append(th)}head.append(tr);for(const cells of rows){const r=el('tr');for(const v of cells)r.append(el('td',String(v)));body.append(r)}t.append(head,body);wrap.append(t);return wrap}
+function codeFor(c,s){if(s.basis==='untested')return '此状态尚未取得证据，暂无复现代码。';if(s.rendering==='screenshot')return '此状态以原站截图展示，尚未提供可执行的组件复现。';const props=Object.entries(s.styles||{}).map(([k,v])=>'  '+k+': '+v+';').join('\n');const label=String(s.label||c.label||c.name).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');return (c.kind==='input'?'<input class="sample" aria-label="本地样例"'+(s.name==='disabled'?' disabled':'')+'>':'<'+c.kind+' class="sample"'+(s.name==='disabled'&&c.kind==='button'?' disabled':'')+'>'+label+'</'+c.kind+'>')+'\n\n/* 本地复现样式；精确程度见证据说明 */\n.sample {\n'+props+'\n}'}
+const articles=[...components.querySelectorAll(':scope > .component')];components.replaceChildren(el('h2','组件总览'),el('p','按功能分类浏览已采样组件。组件页提供使用场景、状态示例、复现参数与证据；分类与文档控制属于 CatchWeb-Design，不代表原站组件库。'));
+const catalogs=new Map(),categoryDocs=new Map();
+const grouped=new Map();for(const [i,c]of(data.components||[]).entries()){const name=category(c);if(!grouped.has(name))grouped.set(name,[]);grouped.get(name).push({i,c})}
+const categories=[...coreCategories.filter(x=>grouped.has(x)),...[...grouped.keys()].filter(x=>!coreCategories.includes(x))];
+for(const [ci,name]of categories.entries()){
+ const id='page-category-'+ci,doc=el('section',undefined,'doc-page');doc.id=id;routes.set(id,doc);outline.set(id,[]);document.getElementById('sections').append(doc);navItems.push({id,title:name,group:'页面'});categoryDocs.set(name,doc);
+ doc.append(el('h1',name),el('p',data.categoryDescriptions?.[name]||'按实际出现的类型查看样例、用途与已确认状态。','component-lede'));
+ for(const {i,c}of grouped.get(name)){
+  heading(doc,id,c.name,'item-'+i);doc.append(el('p',c.note||c.usage||''),articles[i]);
+  const styleLabels={'font-size':'字号','font-weight':'字重','line-height':'行高','width':'宽度','height':'高度','padding':'内边距','border-radius':'圆角'};
+  const confirmed=c.states.find(x=>x.name==='default'&&x.basis!=='untested');
+  if(confirmed){const readable=Object.entries(confirmed.styles||{}).filter(([k])=>styleLabels[k]).map(([k,v])=>styleLabels[k]+' '+v);if(readable.length)doc.append(el('p',readable.join(' · '),'note'))}
+  const unknown=c.states.filter(x=>x.basis==='untested').map(x=>stateNames[x.name]||x.name);if(unknown.length)doc.append(el('p','未验证状态：'+unknown.join('、')+'。','note'));
+ }
+ const linkToCategory=el('a',name,'catalog-link');linkToCategory.href='#'+id;components.append(linkToCategory);
+}
+if(!data.components?.length)empty(components);
+const guide=el('div',undefined,'overview-links');const read=el('h2','阅读这份规范','doc-heading');read.id='overview--guide';document.getElementById('overview').append(read,guide);outline.get('overview').push({id:read.id,title:'阅读这份规范'});for(const [href,title,text]of [['colors','全局样式','色彩、字体、布局与动效，查看参数及依据。'],['components','组件与状态','按功能分类查找样例，进入组件详情。'],['pages','页面与响应式','对照桌面和移动页面，理解布局变化。']]){const a=el('a');a.href='#'+href;a.append(el('strong',title),el('span',text));guide.append(a)}
+// Keep populated sections in one continuous document and omit internal/empty categories.
+const populated=id=>id==='overview'||id==='colors'&&(data.colors||[]).length||id==='typography'&&(data.typography||[]).length||id==='layout'&&((data.layout||[]).length||data.layoutDiagram)||id==='spacing'&&((data.foundations?.spacing||[]).length||(data.foundations?.padding||[]).length)||id==='pages'&&(data.pages||[]).length||id==='motion'&&(data.motion||[]).length||id.startsWith('page-category-')||(data.foundations?.[id]||[]).length;
+const visibleItems=navItems.filter(item=>populated(item.id));
+const order=['概览','基础','页面','交互动效'];visibleItems.sort((a,b)=>order.indexOf(a.group)-order.indexOf(b.group));
+const visibleIds=new Set(visibleItems.map(item=>item.id));
+for(const [id,node]of routes){node.hidden=!visibleIds.has(id);if(!node.hidden){node.dataset.studySection='';if(id!=='overview')document.getElementById('sections').append(node)}}
+for(const a of [...guide.querySelectorAll('a')])if(!visibleIds.has(a.hash.slice(1)))a.remove();
+if(!guide.children.length){guide.remove();read.remove()}
+const directory=document.getElementById('nav'),groups=new Map(),navLinks=[];directory.replaceChildren();
+for(const item of visibleItems){if(!groups.has(item.group)){const group=el('div',undefined,'nav-group');group.append(el('span',item.group));directory.append(group);groups.set(item.group,group)}const a=el('a',item.title);a.href='#'+item.id;groups.get(item.group).append(a);navLinks.push({a,item})}
+const tabs=[...document.querySelectorAll('.doc-tabs a')];for(const [i,group]of order.entries()){const tab=tabs[i],first=visibleItems.find(item=>item.group===group);tab.dataset.group=group;tab.hidden=!first;if(first)tab.href='#'+first.id}
+for(const {id}of visibleItems){const node=routes.get(id);if(id==='overview')continue;for(const [i,h]of [...node.querySelectorAll(':scope > article h3,:scope > .token-grid h3,:scope > .pages h3')].entries()){h.id=id+'--item-'+i;outline.get(id).push({id:h.id,title:h.textContent})}}
+const search=document.getElementById('directory-search');search.addEventListener('input',()=>{const q=search.value.trim().toLocaleLowerCase();let count=0;for(const {a,item}of navLinks){a.hidden=!((item.title+' '+item.group).toLocaleLowerCase().includes(q));if(!a.hidden)count++}for(const group of groups.values())group.hidden=![...group.querySelectorAll('a')].some(a=>!a.hidden);document.getElementById('directory-empty').hidden=count>0});search.addEventListener('keydown',event=>{if(event.key==='Escape'){search.value='';search.dispatchEvent(new Event('input'))}if(event.key==='Enter'){const first=navLinks.find(x=>!x.a.hidden);if(first)location.hash=first.item.id}});
+function outlineFor(id){const entries=outline.get(id)||[],toc=document.getElementById('page-toc-links'),mobile=document.getElementById('mobile-toc-links'),details=document.getElementById('mobile-toc');toc.replaceChildren();mobile.replaceChildren();details.open=false;details.hidden=!entries.length;for(const entry of entries){const a=el('a',entry.title);a.href='#'+entry.id;toc.append(a);mobile.append(a.cloneNode(true))}const current=visibleItems.find(item=>item.id===id);for(const tab of tabs){if(tab.dataset.group===current?.group)tab.setAttribute('aria-current','location');else tab.removeAttribute('aria-current')}}
+addEventListener('catchart:sectionchange',event=>outlineFor(event.detail.id));
+function restoreAnchor(){let hash;try{hash=decodeURIComponent(location.hash.slice(1))}catch{hash=''}const key=hash.split('--')[0];requestAnimationFrame(()=>{if(visibleIds.has(key)){const target=document.getElementById(hash)||routes.get(key);target.scrollIntoView({behavior:'instant',block:'start'})}else scrollTo({top:0,behavior:'instant'})})}
+addEventListener('hashchange',restoreAnchor);restoreAnchor();
+</script><script>__STUDY_NAVIGATION__</script></html>
