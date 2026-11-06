@@ -8,7 +8,7 @@ Turn a reference webpage into a detailed, browsable design specification and a r
 
 ![CatchWeb-Design — from a plain prototype to a cohesive visual design](docs/assets/catchweb-design-intro.png)
 
-*AI-generated illustrative concept. This explains the intended workflow; it is not an actual extraction benchmark or a verified before/after result.*
+*AI-generated illustrative concept ([generation prompt](docs/intro-image-prompt.md)). This explains the intended workflow; it is not an actual extraction benchmark or a verified before/after result.*
 
 ## What it does
 
