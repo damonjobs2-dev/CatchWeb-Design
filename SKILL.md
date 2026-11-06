@@ -2,7 +2,7 @@
 name: catchweb-design
 description: Extract a reference webpage into an evidence-backed visual design specification and reusable DESIGN.md for restyling another website. Use for URL-to-design-system, visual style extraction, or a design handoff from a live page.
 metadata:
-  version: "0.1.0-beta.1"
+  version: "1.2.0"
 ---
 
 # CatchWeb-Design
